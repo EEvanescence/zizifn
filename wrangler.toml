@@ -1,6 +1,7 @@
 name = "spring"
 main = "_worker.js"
 compatibility_date = "2025-05-19"
+compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 # logpush job is setup to capture from envs ending: log, pro, or one
 logpush = false
