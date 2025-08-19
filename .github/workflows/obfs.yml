@@ -32,13 +32,10 @@ jobs:
       - name: Obfuscate index.js
         run: |
           javascript-obfuscator index.js --output _worker.js \
-            --compact true \
             --control-flow-flattening true \
             --control-flow-flattening-threshold 1 \
             --dead-code-injection true \
             --dead-code-injection-threshold 1 \
-            --identifier-names-generator hexadecimal \
-            --unicode-escape-sequence true
 
 #      - name: Add multiline version comment to _worker.js
 #        run: |
