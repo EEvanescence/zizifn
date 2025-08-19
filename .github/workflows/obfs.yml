@@ -38,24 +38,20 @@ jobs:
             --dead-code-injection true \
             --dead-code-injection-threshold 1 \
             --identifier-names-generator hexadecimal \
-            --rename-globals false \
-            --string-array true \
-            --string-array-encoding 'rc4' \
-            --string-array-threshold 1 \
             --unicode-escape-sequence true
 
-      - name: Add multiline version comment to _worker.js
-        run: |
-          if [ -s _worker.js ]; then
-            VERSION_BLOCK="/*\n * Last update: $(date -u '+%Y-%m-%d %H:%M:%S') UTC\n * We are all REvil - version based on commit ${{ github.sha }}\n */"
-            {
-              printf '%b\n\n' "$VERSION_BLOCK"
-              cat _worker.js
-            } > _worker_temp.js
-            mv _worker_temp.js _worker.js
-          else
-            echo "⚠️ _worker.js is missing or empty. Skipping version comment insertion."
-          fi
+#      - name: Add multiline version comment to _worker.js
+#        run: |
+#          if [ -s _worker.js ]; then
+#            VERSION_BLOCK="/*\n * Last update: $(date -u '+%Y-%m-%d %H:%M:%S') UTC\n * We are all REvil - version based on commit ${{ github.sha }}\n */"
+#            {
+#              printf '%b\n\n' "$VERSION_BLOCK"
+#              cat _worker.js
+#            } > _worker_temp.js
+#            mv _worker_temp.js _worker.js
+#          else
+#            echo "⚠️ _worker.js is missing or empty. Skipping version comment insertion."
+#          fi
 
       - name: Commit and push changes
         run: |
