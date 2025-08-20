@@ -32,8 +32,6 @@ jobs:
       - name: Obfuscate index.js
         run: |
           javascript-obfuscator index.js --output _worker.js \
-            --control-flow-flattening true \
-            --control-flow-flattening-threshold 1 \
             --dead-code-injection true \
             --dead-code-injection-threshold 1 \
 
