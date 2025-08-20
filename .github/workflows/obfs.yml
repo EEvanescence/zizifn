@@ -1,25 +1,22 @@
-name: Minimal Obfuscate and Version Update
+name: Simple Obfuscation (Working)
 
 on:
   push:
     branches: [main]
     paths:
       - '**/index.*'
-      - '**/obfs.*'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build_and_version:
+  simple_build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -29,37 +26,44 @@ jobs:
       - name: Install javascript-obfuscator
         run: npm install -g javascript-obfuscator
 
-      - name: Minimal obfuscation
+      - name: Simple safe obfuscation
         run: |
+          echo "🔧 Applying minimal obfuscation..."
           javascript-obfuscator index.js --output _worker.js \
             --compact true \
             --identifier-names-generator hexadecimal \
-            --string-array true \
-            --string-array-threshold 0.5
+            --disable-console-output false \
+            --self-defending false
 
-      - name: Validate and add version
+      - name: Validate and finalize
         run: |
-          # Check if file exists and is valid
           if [ ! -s _worker.js ]; then
-            echo "❌ Obfuscation failed"
+            echo "❌ Obfuscation failed - empty file"
             exit 1
           fi
           
-          # Syntax check
-          node -c _worker.js || exit 1
+          echo "📊 Original size: $(wc -c < index.js) bytes"
+          echo "📊 Obfuscated size: $(wc -c < _worker.js) bytes"
+          
+          if ! node -c _worker.js; then
+            echo "❌ Syntax error in obfuscated file"
+            exit 1
+          fi
+          
+          echo "✅ Obfuscation successful"
           
           # Add version comment
-          VERSION_BLOCK="/*\n * Last update: $(date -u '+%Y-%m-%d %H:%M:%S') UTC\n * We are all REvil - version based on commit ${{ github.sha }}\n */"
+          VERSION_BLOCK="/*\n * REvil Worker - Last update: $(date -u '+%Y-%m-%d %H:%M:%S') UTC\n * Build: ${{ github.sha }}\n */"
           {
             printf '%b\n\n' "$VERSION_BLOCK"
             cat _worker.js
           } > _worker_temp.js
           mv _worker_temp.js _worker.js
 
-      - name: Commit and push changes
+      - name: Commit changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add _worker.js
-          git commit -m "Automated build: obfuscation and version update" -m "Based on commit ${{ github.sha }}" || echo "No changes to commit."
-          git push origin ${{ github.ref }}
+          git commit -m "Safe obfuscation build" || echo "No changes to commit."
+          git push
