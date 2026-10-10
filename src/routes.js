@@ -10,8 +10,24 @@ import {
   buildSettingsUrl,
 } from "./core.js";
 import panelB64 from "./panel.b64";
-const panelBytes = Uint8Array.from(atob(panelB64), (c) => c.charCodeAt(0));
-const panelHtml = new TextDecoder("utf-8").decode(panelBytes);
+
+let cachedPanelHtml = null;
+function getPanelHtml() {
+  if (!cachedPanelHtml) {
+    try {
+      if (typeof panelB64 === "string" && panelB64.trim().length > 0) {
+        const panelBytes = Uint8Array.from(atob(panelB64.trim()), (c) => c.charCodeAt(0));
+        cachedPanelHtml = new TextDecoder("utf-8").decode(panelBytes);
+      } else {
+        cachedPanelHtml = "<h1>Panel Template Not Found</h1><p>Please build src/panel.b64 before deploying.</p>";
+      }
+    } catch (e) {
+      console.error("Failed to decode panel.b64:", e);
+      cachedPanelHtml = `<h1>Panel Decode Error</h1><p>${e.message}</p>`;
+    }
+  }
+  return cachedPanelHtml;
+}
 
 export async function handleIpSubscription(request, core, userID, hostName, ctx, enhanced = false) {
   const url = new URL(request.url);
@@ -213,6 +229,7 @@ export async function handleConfigPage(userID, hostName, proxyAddress, workerNam
   const subClashUrl = `https://${hostName}/clash/${userID}?name=${encodedSubName}`;
   const subSbUrl = `https://${hostName}/sb/${userID}?name=${encodedSubName}`;
 
+  const panelHtml = getPanelHtml();
   const finalHTML = panelHtml
   .replace(/{{PROXY_ADDRESS}}/g, proxyAddress)
   .replace(/{{CONFIG_DREAM}}/g, dream)
