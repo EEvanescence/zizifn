@@ -8,18 +8,11 @@ import {
   handleIpSubscription,
   handleMyConnection,
   handleResolveDomain,
-  handleProxyIpsInfo,
-  handleProxyHostInfo,
 } from "./src/routes.js";
 
 let wasmReady = null;
 function ensureWasm() {
-  if (!wasmReady) {
-    wasmReady = init({ module_or_path: wasm }).catch((e) => {
-     wasmReady = null;
-     throw e;
-   });
-  }
+  if (!wasmReady) wasmReady = init(wasm);
   return wasmReady;
 }
 
@@ -31,7 +24,7 @@ function notFoundPage(hostName, workerName) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Oops. Not Found</title>
+<title>Not Found</title>
 <style>
   body {
     background: #0d1117;
@@ -91,41 +84,30 @@ export default {
 
       if (upgradeHeader && upgradeHeader.toLowerCase() === "websocket") {
         await ensureWasm();
-        return await ProtocolOverWSHandler(request, {
+        return ProtocolOverWSHandler(request, {
           userID: cfg.userID,
           proxyPool: cfg.proxyPool,
-          nat64: cfg.nat64,
         });
       }
 
-      if (url.pathname === "/resolve-domain") return await handleResolveDomain(request);
-      if (url.pathname === "/proxy-host-info") return await handleProxyHostInfo(request, env, ctx);
-      if (url.pathname === "/my-connection") return await handleMyConnection(request, env, ctx);
-      if (url.pathname.startsWith(`/proxy-ips/${cfg.userID}`))
-        return await handleProxyIpsInfo(request, cfg, url.hostname, ctx, env);
+      if (url.pathname === "/resolve-domain") return handleResolveDomain(request);
+      if (url.pathname === "/my-connection") return handleMyConnection(request, env, ctx);
       if (url.pathname.startsWith(`/xray-enhanced/${cfg.userID}`))
-        return await handleIpSubscription(request, "xray", cfg.userID, url.hostname, ctx, true, cfg, env);
+        return handleIpSubscription(request, "xray", cfg.userID, url.hostname, ctx, true);
       if (url.pathname.startsWith(`/xray/${cfg.userID}`))
-        return await handleIpSubscription(request, "xray", cfg.userID, url.hostname, ctx, false, cfg, env);
+        return handleIpSubscription(request, "xray", cfg.userID, url.hostname, ctx, false);
       if (url.pathname.startsWith(`/sb/${cfg.userID}`))
-        return await handleIpSubscription(request, "sb", cfg.userID, url.hostname, ctx, false, cfg, env);
+        return handleIpSubscription(request, "sb", cfg.userID, url.hostname, ctx);
       if (url.pathname.startsWith(`/clash/${cfg.userID}`))
-        return await handleClashConfig(request, cfg.userID, url.hostname, ctx);
+        return handleClashConfig(request, cfg.userID, url.hostname, ctx);
       if (url.pathname.startsWith(`/${cfg.userID}`))
-        return await handleConfigPage(
-          cfg.userID,
-          url.hostname,
-          cfg.proxyAddress,
-          cfg.workerName,
-          cfg.nat64,
-        );
+        return handleConfigPage(cfg.userID, url.hostname, cfg.proxyAddress, cfg.workerName);
 
       return new Response(notFoundPage(url.hostname, cfg.workerName), {
         status: 404,
         headers: { "Content-Type": "text/html; charset=utf-8" },
       });
     } catch (err) {
-      console.error(err.stack || err);
       return new Response(`Worker Logic Error: ${err.message}\n${err.stack}`, {
         status: 500,
         headers: { "Content-Type": "text/plain" },

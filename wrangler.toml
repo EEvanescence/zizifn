@@ -15,6 +15,7 @@ type = "Text"
 globs = ["**/*.b64"]
 fallthrough = true
 
+
 [observability]
 enabled = true
 head_sampling_rate = 1
